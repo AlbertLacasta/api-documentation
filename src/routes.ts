@@ -1,15 +1,14 @@
 import Vue 					        from 'vue';
 import VueRouter, {RouteConfig}     from 'vue-router';
-import { WebPages }                 from "@/constants";
 
 Vue.use(VueRouter);
 
 const routes: RouteConfig[] = [
     {
-        meta: { title: "Home", conditionalRoute:true },
+        meta: { title: "Inspector", conditionalRoute:true },
         path: '/',
-        name: WebPages.HOME,
-        component: () => import('@/main/home/HomePage.vue')
+        name: 'inspector',
+        component: () => import('@/main/views/inspector/InspectorPage.vue')
 
     }
 ];
