@@ -1,6 +1,13 @@
 <template>
-    <div class="py-3 pt-0">
-        <div style="margin: 50px 0;" class="px-5">
+    <v-progress-circular
+        v-if="data == null"
+        :size="50"
+        color="primary"
+        indeterminate
+    ></v-progress-circular>
+
+    <div v-else class="pt-0">
+        <div style="margin: 45px 0;" class="px-5">
             <h2>{{data.getInfoTitle()}}</h2>
             <pre style="font-size: 12px" v-text="getPreData()"></pre>
             <a
@@ -11,12 +18,10 @@
                 {{url}}
             </a>
 
-            <p style="margin: 1em auto;">This is a sample server Petstore server. You can find out more about Swagger at http://swagger.io or on irc.freenode.net, #swagger. For this sample, you can use the api key special-key to test the authorization filters.</p>
+            <p style="margin: 1em auto;">{{data.getInfoDescription()}}</p>
         </div>
 
-        <div class="scheme">
-
-        </div>
+        <inspector-page-server :apiDoc="data"></inspector-page-server>
 
         <!------------------------------------------------------------>
         <!-- GROUP                                                  -->
@@ -25,103 +30,74 @@
             <v-expansion-panel
                 v-for="(group,i) in data.getGroups()"
                 :key="i"
-                class="expansion-panel mb-1"
+                class="expansion-panel mt-0"
             >
                 <v-expansion-panel-header class="expansion-panel-header pa-0 pb-3 pl-3">
                     <span class="expansion-panel-header-title mr-3">{{group.getTitle()}}</span>
                     <span>Everything about your Pets</span>
                 </v-expansion-panel-header>
                 <v-expansion-panel-content class="expansion-panel-content pt-1 px-0">
-
                     <!------------------------------------------------------------>
                     <!-- ENDPOINTS                                              -->
                     <!------------------------------------------------------------>
-                    <v-expansion-panels flat>
-                        <v-expansion-panel
-                            v-for="(endpoint,i) in group.getPaths()"
-                            :key="i"
-                            class="expansion-panel-child mb-1"
-                            :style="{
-                                'background-color': getTypeColor(endpoint.getPathType()).background,
-                                'border': '1px solid ' + getTypeColor(endpoint.getPathType()).border
-                            }"
-                        >
-                            <v-expansion-panel-header class="expansion-panel-child-header pa-0 pr-2">
-                                <!-- API Type -->
-                                <v-chip
-                                    :color="getTypeColor(endpoint.getPathType()).chipColor"
-                                    label
-                                    class="white--text expansion-panel-child-chip"
-                                >
-                                    {{endpoint.getPathType()}}
-                                </v-chip>
-                                <!-- API Path -->
-                                <span class="expansion-panel-child-header-title mr-1">{{endpoint.getPathUrl()}}</span>
-
-                                <!-- API Description -->
-                                <span style="font-size: 13px">{{endpoint.getPathSummary()}}</span>
-
-                                <template v-slot:actions>
-                                    <v-icon size="20" color="rgb(122, 127, 133)">
-                                        mdi-lock
-                                    </v-icon>
-                                </template>
-                            </v-expansion-panel-header>
-                            <v-expansion-panel-content class="pt-4">
-                                <p>{{endpoint.getPathDescription()}}</p>
-                            </v-expansion-panel-content>
-                        </v-expansion-panel>
-                    </v-expansion-panels>
-                    <!-- End ENPOINTS -->
-
+                    <scheme-endpoint :group="group"></scheme-endpoint>
                 </v-expansion-panel-content>
             </v-expansion-panel>
         </v-expansion-panels>
-
     </div>
 </template>
 
 <script lang="ts">
-import {defineComponent} from "@vue/composition-api";
+import {defineComponent, ref, Ref, SetupContext, watch} from "@vue/composition-api";
 import {ApiDoc} from "@/main/impl/ApiDoc";
+import InspectorPageServer from "@/main/views/inspector/InspectorPageServer.vue";
+import axios from "axios";
+import SchemeEndpoint from "@/main/views/inspector/SchemeEndpoint.vue";
 
 export default defineComponent({
     name: "HomePage",
     components: {
+        SchemeEndpoint,
+        InspectorPageServer
     },
-    props: {
-        data: {
-            type: ApiDoc,
-            required: true
-        },
-        url: {
-            type: String,
-            required: true
-        }
-    },
-    setup(props) {
+    setup(props, context: SetupContext) {
+        const data :Ref<ApiDoc | null> = ref(null)
+
+        const url :Ref<string > = ref("")
 
         function getPreData() {
-            const server = props.data.getServers();
-            console.log(server)
-            return "[ Base URL: " + server[0].getServerUrl() + " ]";
+            if(data.value) {
+                return "[ Base URL: " + data.value?.server.getServerUrl() + " ]";
+            }
+            return "";
         }
 
-        function getTypeColor(type:string) {
-            switch (type) {
-                case "GET":
-                    return {chipColor: '#61affe', background: 'rgba(97,175,254,.1)', border: '#61affe'};
-                case "POST":
-                    return {chipColor: '#49cc90', background: 'rgba(73, 204, 144, 0.1)', border: 'rgb(73, 204, 144)'}
-                case "PUT":
-                    return {chipColor: '#fca130', background: 'rgba(252,161,48,.1)', border: '#fca130'};
-                case "DELETE":
-                    return {chipColor: '#f93e3e', background: 'rgba(249,62,62,.1)', border: '#f93e3e'};
+        async function fetchData(path:string) {
+            const response = await axios.get(path,
+                {
+                    'headers': {
+                        'Access-Control-Allow-Origin': '*',
+                    }
+                }
+            );
+
+            if(response.data) {
+                data.value = new ApiDoc(response.data);
             }
         }
+
+        watch(
+            () => context.root.$route,
+            (route: any) => {
+                url.value = route.query.url;
+                fetchData(route.query.url);
+            }
+        )
+
         return {
-            getTypeColor,
-            getPreData
+            getPreData,
+            data,
+            url
         }
     }
 })
@@ -135,20 +111,13 @@ h2 {
     color: #3b4151;
 }
 
-.scheme {
-    height: 80px;
-    margin: 0 0 35px;
-    padding: 30px 0;
-    background: #fff;
-    box-shadow:0 1px 2px 0 rgba(0,0,0,.15);
-}
-
 /*********************************************************/
 /** GROUPS                                              **/
 /*********************************************************/
 .expansion-panel {
     padding: 10px 20px 10px 10px;
     background-color: transparent !important;
+    border-radius: 0px !important;
 }
 
 .expansion-panel:hover {
@@ -171,42 +140,4 @@ h2 {
     padding: 0px !important;
 }
 
-/*********************************************************/
-/** ENDPOINTS                                           **/
-/*********************************************************/
-
-.expansion-panel-child {
-    margin: 0 0 15px !important;
-    /*height: 38px !important;*/
-    border-radius: 4px;
-    padding: 5px;
-}
-
-.expansion-panel-child-chip {
-    max-width: 80px !important;
-    max-height: 28px !important;
-    font-size: 14px;
-    font-weight: 700;
-    min-width: 80px;
-    padding: 6px 15px;
-    text-align: center;
-    font-family: sans-serif;
-    color: #fff;
-}
-
-.expansion-panel-child-chip >>> .v-chip__content{
-    text-align: center !important;
-}
-
-.expansion-panel-child-header {
-    min-height: fit-content !important;
-}
-.expansion-panel-child-header-title {
-    max-width: fit-content;
-    color: rgb(59, 65, 81);
-    font-size: 16px;
-    padding: 0 10px;
-    font-family: monospace;
-    font-weight: 600 !important;
-}
 </style>

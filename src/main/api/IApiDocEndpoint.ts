@@ -20,10 +20,22 @@ export interface IPathParameters {
     schema: Record<string, any>;
 }
 
+export interface IEndpointResponse {
+    /**
+     * 
+     */
+    description: string;
+
+    /**
+     * 
+     */
+    content: Record<string, any>
+}
+
 /**
  *
  */
-export interface IPathRequest {
+export interface IEndpointRequest {
     /**
      *
      */
@@ -47,16 +59,16 @@ export interface IPathRequest {
     /**
      *
      */
-    responses: Record<string, any>;
+    responses: Record<string, IEndpointResponse>;
 }
 
 
 /**
  *
  */
-export interface IApiDocPath {
-    get?: IPathRequest;
-    post?: IPathRequest;
-    put?: IPathRequest;
-    delete?: IPathRequest;
+export interface IApiDocEndpoint {
+    get?: IEndpointRequest;
+    post?: IEndpointRequest;
+    put?: IEndpointRequest;
+    delete?: IEndpointRequest;
 }

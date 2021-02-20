@@ -1,8 +1,9 @@
-import {IApiDocPath} from "@/main/api/IApiDocPath";
+import {IApiDocEndpoint} from "@/main/api/IApiDocEndpoint";
 
 export interface IApiDocInfo {
     title: string;
-    version: string;
+    version?: string;
+    description?: string;
 }
 
 export interface IApiDocServers {
@@ -15,10 +16,11 @@ export interface IApiDocServers {
  *
  */
 export interface IApiDoc {
+
     /**
      *
      */
-    openapi: string;
+    components: Record<string, any>;
 
     /**
      *
@@ -28,15 +30,16 @@ export interface IApiDoc {
     /**
      *
      */
+    openapi: string;
+
+    /**
+     *
+     */
+    paths: Record<string, IApiDocEndpoint>;
+
+    /**
+     *
+     */
     servers: Array<IApiDocServers>;
 
-    /**
-     *
-     */
-    paths: Record<string, IApiDocPath>;
-
-    /**
-     *
-     */
-    components: Record<string, any>;
 }

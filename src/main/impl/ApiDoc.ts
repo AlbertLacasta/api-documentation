@@ -1,8 +1,7 @@
 import {IApiDoc} from "@/main/api/IApiDoc";
 import {ApiDocServer} from "@/main/impl/ApiDocServer";
-import {ApiDocPath} from "@/main/impl/ApiDocPath";
+import {ApiDocEndpoint} from "@/main/impl/ApiDocEndpoint";
 import {ApiDocGroup} from "@/main/impl/ApiDocGroup";
-import {IApiDocPath} from "@/main/api/IApiDocPath";
 
 export class ApiDoc {
 
@@ -22,14 +21,13 @@ export class ApiDoc {
      *
      * @private
      */
-    private readonly m_groups: Array<ApiDocGroup>;
+    private m_selectedServer: ApiDocServer;
 
     /**
      *
      * @private
      */
-    private readonly m_paths: Array<ApiDocPath>;
-
+    private readonly m_groups: Array<ApiDocGroup>;
 
     /**
      *
@@ -39,12 +37,16 @@ export class ApiDoc {
         this.m_data = data;
 
         this.m_servers = data.servers.map((server) => new ApiDocServer(server));
-        this.m_paths = [];
-        this.m_groups = [];
+        this.m_selectedServer =  this.m_servers[0];
 
+        this.m_groups = [];
         const mapEndpoints = this.__groupEndPoints(data);
         mapEndpoints.forEach((endpoint, key) => this.m_groups.push(new ApiDocGroup(key, endpoint)));
     }
+
+    /** *********************************************************** **/
+    /** Info                                                        **/
+    /** *********************************************************** **/
 
     /**
      *
@@ -57,10 +59,22 @@ export class ApiDoc {
     /**
      *
      */
-    public getInfoVersion(): string
+    public getInfoVersion(): string | undefined
     {
         return this.m_data.info.version;
     }
+
+    /**
+     *
+     */
+    public getInfoDescription(): string | undefined
+    {
+        return this.m_data.info.description;
+    }
+
+    /** *********************************************************** **/
+    /** Servers                                                     **/
+    /** *********************************************************** **/
 
     /**
      *
@@ -71,20 +85,33 @@ export class ApiDoc {
     }
 
     /**
-     *
+     * Getter and Setter of the server
+     */
+    public get server(): ApiDocServer
+    {
+        return this.m_selectedServer
+    }
+
+    public set server(server:ApiDocServer)
+    {
+        this.m_selectedServer = server;
+    }
+
+    /** *********************************************************** **/
+    /** Groups of endpoints                                         **/
+    /** *********************************************************** **/
+
+    /**
+     * Return the grouped endpoint by path
      */
     public getGroups(): Array<ApiDocGroup>
     {
         return this.m_groups;
     }
 
-    /**
-     *
-     */
-    public getPaths(): Array<ApiDocPath>
-    {
-        return this.m_paths;
-    }
+    /** *********************************************************** **/
+    /** PRIVATE                                                     **/
+    /** *********************************************************** **/
 
     private __groupEndPoints(data: IApiDoc)
     {
@@ -95,7 +122,7 @@ export class ApiDoc {
             for (var type in data.paths[path]) {
                 const endData = data.paths[path];
                 // @ts-ignore
-                const apiDocPath = new ApiDocPath(path, type.toUpperCase(), endData[type]);
+                const apiDocPath = new ApiDocEndpoint(path, type.toUpperCase(), endData[type]);
                 if (!collection) {
                     map.set(key, [apiDocPath]);
                 } else {

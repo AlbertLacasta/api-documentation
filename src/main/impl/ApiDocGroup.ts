@@ -1,5 +1,5 @@
-import {ApiDocPath} from "@/main/impl/ApiDocPath";
-import {IApiDocPath} from "@/main/api/IApiDocPath";
+import {ApiDocEndpoint} from "@/main/impl/ApiDocEndpoint";
+import {IApiDocEndpoint} from "@/main/api/IApiDocEndpoint";
 
 export class ApiDocGroup {
 
@@ -13,14 +13,14 @@ export class ApiDocGroup {
      *
      * @private
      */
-    private readonly m_paths: Array<ApiDocPath>;
+    private readonly m_paths: Array<ApiDocEndpoint>;
 
 
     /**
      *
      * @param data
      */
-    public constructor(title: string, data:Array<ApiDocPath>) {
+    public constructor(title: string, data:Array<ApiDocEndpoint>) {
         this.m_title = title;
         this.m_paths = data;
     }
@@ -35,7 +35,7 @@ export class ApiDocGroup {
     /**
      *
      */
-    public getPaths(): Array<ApiDocPath>
+    public getPaths(): Array<ApiDocEndpoint>
     {
         return this.m_paths;
     }

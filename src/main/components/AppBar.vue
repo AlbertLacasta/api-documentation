@@ -7,36 +7,50 @@
         height="60px"
         class="px-1"
     >
-        <v-toolbar-title>Title</v-toolbar-title>
+        <v-toolbar-title @click="gotoHome()" style="cursor:pointer;">Api Docs</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
         <form  class="d-flex search" style=" flex: 3">
-            <input v-model="path" type="text">
-            <button
-                @click="$emit('pathChange', path)"
+            <input
+                v-model="path"
+                @keyup.enter="goToInspector( path)"
+                type="text"
+                class="pl-3"
+            >
+            <v-btn
+                @click="goToInspector( path)"
                 class="download-url-button"
             >
                 Explore
-            </button>
+            </v-btn>
         </form>
     </v-app-bar>
 </template>
 
 <script lang="ts">
-import {defineComponent, Ref, ref} from "@vue/composition-api";
+import {defineComponent, Ref, ref, SetupContext} from "@vue/composition-api";
 
 export default defineComponent({
     name: "AppBar",
-    setup() {
+    setup(_, context:SetupContext) {
         /***
          *
          */
-        const path:Ref<string | null> = ref(null);
+        const path:Ref<string> = ref(  "");
 
+        function goToInspector(path:string) {
+            context.root.$router.push({path: "/api-docs", query: {url: path}})
+        }
+
+        function gotoHome() {
+            context.root.$router.push({path: "/"})
+        }
 
         return {
-            path
+            path,
+            goToInspector,
+            gotoHome
         }
     }
 })
@@ -47,13 +61,14 @@ export default defineComponent({
     height: 38px;
 }
 .download-url-button {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 16px !important;
+    font-weight: 700 !important;
     padding: 4px 30px;
-    border: none;
+    height: 38px !important;
     border-radius: 0 4px 4px 0;
-    background: #62a03f;
+    background: #62a03f !important;
     font-family: sans-serif;
+    text-transform: inherit !important;
     color: #fff;
 }
 
